@@ -47,11 +47,11 @@ you are ready to go, but you may want to do more config.
 
 If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
 
-You may also want to set up global `.gitignore` and add `.cloudy-server-running~` there. Example:
+You may also want to set up global `.gitignore` and add `.cloudy-server-running` there. Example:
 
 ```bash
 git config --global core.excludesfile ~/.gitignore_global
-echo .cloudy-server-running~ >> ~/.gitignore_global
+echo \*\*/.cloudy-server-running >> ~/.gitignore_global
 ```
 
 ## Configuration
@@ -109,7 +109,7 @@ Subcommands - control:
   cmd-alt <COMMAND...> - runs command on server. Non-interactive shell
   ssh - opens shell on server
   get <PATH> - downloads file off server
-  stop - stops server
+  stop - stops DigitalOcean server
 ```
 
 ## Interactive `cloudy cmd` problem
@@ -134,6 +134,8 @@ processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
 ## TODO
 
 - add option to use `mosh`
+- search parent directories for `.cloudy-server-running`
+- global `.cloudy-server-running` database as an option
 - `tar` instead of rclone - probably unnecessary
 
 ```bash

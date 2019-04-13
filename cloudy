@@ -7,7 +7,7 @@ GLOBAL_CONF=~/.cloudy
 GLOBAL_INIT=~/.cloudy-init.sh
 LOCAL_CONF=.cloudy
 LOCAL_INIT=.cloudy-init.sh
-LOCAL_LOCKFILE=.cloudy-server-running~
+LOCAL_LOCKFILE=.cloudy-server-running
 
 # Defaults
 
@@ -126,7 +126,7 @@ print_help(){
     echo "  cmd-alt <COMMAND...> - runs command on server. Non-interactive shell"
     echo "  ssh - opens shell on server"
     echo "  get <PATH> - downloads file off server"
-    echo "  stop - stops server"
+    echo "  stop - stops DigitalOcean server"
 }
 
 ## Init
