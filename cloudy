@@ -134,7 +134,7 @@ cmd_init(){
 
     echo "Droplet started."
 
-    # TODO: maybe DO will start pushings fingerprint via API one day
+    # TODO: maybe DO will start pushing fingerprint via API one day
     ssh-keyscan $IP >> ~/.ssh/known_hosts
 
     echo "Setting up server..."
