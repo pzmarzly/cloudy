@@ -75,7 +75,7 @@ m_rsync(){
     if [ "$SEND_GITIGNORE" == "0" ]; then
         FLAGS+=("--filter=:- .gitignore")
     fi
-    if [ "$SEND_GIT" == 0]; then
+    if [ "$SEND_GIT" == "0" ]; then
         FLAGS+=("--exclude=.git*")
     fi
 
@@ -209,7 +209,8 @@ cmd_reinit(){
 cmd_cmd(){
     assert_lockfile_present
     m_rsync $ID $IP
-    m_ssh $ID $IP " bash -ls -c \" cd cloudy; $@\""
+    CMD=" cd cloudy; $@"
+    m_ssh $ID $IP " bash -ls -c \"$CMD\""
 }
 
 cmd_ssh(){
