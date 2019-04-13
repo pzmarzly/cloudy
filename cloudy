@@ -4,6 +4,7 @@ set -e
 # Constants
 
 GLOBAL_CONF=~/.cloudy
+GLOBAL_INIT=~/.cloudy-init.sh
 LOCAL_CONF=.cloudy
 LOCAL_INIT=.cloudy-init.sh
 LOCAL_LOCKFILE=.cloudy-server-running~
@@ -121,6 +122,7 @@ print_help(){
     echo "Subcommands - control:"
     echo "  reinit - reexecutes $LOCAL_INIT on server"
     echo "  cmd <COMMAND...> - runs command on server"
+    echo "  ssh - opens shell on server"
     echo "  get <PATH> - downloads file off server"
     echo "  stop - stops server"
 }
@@ -131,6 +133,20 @@ random_id(){
     head /dev/urandom | tr -dc A-Za-z | head -c16
 }
 
+run_init(){
+    if [ -f $GLOBAL_INIT ] || [ -f $LOCAL_INIT ]; then
+        m_ssh $ID $IP " apt-get update"
+    fi
+
+    if [ -f $GLOBAL_INIT ]; then
+        m_ssh $ID $IP " bash -ls" < $GLOBAL_INIT
+    fi
+
+    if [ -f $LOCAL_INIT ]; then
+        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
+    fi
+}
+
 server_setup(){
     echo "Setting up server..."
 
@@ -138,11 +154,7 @@ server_setup(){
     m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile | true"
 
     m_rsync $ID $IP &
-
-    if [ -f $LOCAL_INIT ]; then
-        m_ssh $ID $IP " apt-get update"
-        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
-    fi
+    run_init
 
     echo "Waiting for files to finish transferring..."
     wait
@@ -193,18 +205,19 @@ cmd_use(){
 
 cmd_reinit(){
     assert_lockfile_present
-    if [ ! -f $LOCAL_INIT ]; then
-        echo "Did not find $LOCAL_INIT!"
-        exit 1
-    fi
-    m_ssh $ID $IP " apt-get update"
-    m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
+    run_init
 }
 
 cmd_cmd(){
     assert_lockfile_present
     m_rsync $ID $IP
     m_ssh $ID $IP " bash -ls -c \" cd cloudy; $@\""
+}
+
+cmd_ssh(){
+    assert_lockfile_present
+    m_rsync $ID $IP
+    m_ssh $ID $IP
 }
 
 cmd_get(){

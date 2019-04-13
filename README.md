@@ -54,6 +54,9 @@ Cloudy has default configuration that can be overridden by global (`~/.cloudy`) 
 local (`.cloudy`) config files. If both files exist, both are loaded, but options from local
 config have precedence over global ones.
 
+On server setup and after `cloudy reinit`, `~/.cloudy-init.sh` and `.cloudy-init.sh` are run on
+the server as root, if they exists.
+
 ### Default configuration
 
 ```bash
