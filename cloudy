@@ -12,9 +12,11 @@ LOCAL_LOCKFILE=.cloudy-server-running~
 
 KEY_PATH=~/.ssh/id_rsa
 REGION=fra1
-# SIZE=s-2vcpu-4
-SIZE=1gb
-FILE_CHANNEL_REUSE=1 # https://github.com/symfony/symfony/issues/25580
+SIZE=s-1vcpu-1gb
+FILE_CHANNEL_REUSE=1
+SEND_CLOUDY=0
+SEND_GITIGNORE=0
+SEND_GIT=0
 
 # Load config
 
@@ -26,23 +28,49 @@ if [ -f $LOCAL_CONF ]; then
     . $LOCAL_CONF
 fi
 
+if [ -f $LOCAL_LOCKFILE ]; then
+    ID=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+fi
+
+if [ -f $LOCAL_LOCKFILE ]; then
+    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
+fi
+
+assert_lockfile_present(){
+    if [ ! -f $LOCAL_LOCKFILE ]; then
+        echo "Server not running!"
+        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
+        exit 1
+    fi
+}
+
 m_ssh(){
     FLAGS=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
         "-o" "ControlPath=~/.ssh/master-$1"
+        "-i" "$KEY_PATH"
         "root@$2" "$3")
     ssh "${FLAGS[@]}"
 }
 
 m_rsync(){
-    FLAGS=("-r" "-t" "-p" # t - timestamps, p - permissions
-        "--exclude=.git*"
-        "--exclude=.cloudy*"
-        "--filter=:- .gitignore")
-    if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
-        FLAGS+=("-e"
-            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1")
+    FLAGS=("-r" "-t" "-p") # t - timestamps, p - permissions
+
+    if [ "$SEND_CLOUDY" == "0" ]; then
+        FLAGS+=("--exclude=.cloudy*")
     fi
+    if [ "$SEND_GITIGNORE" == "0" ]; then
+        FLAGS+=("--filter=:- .gitignore")
+    fi
+    if [ "$SEND_GIT" == 0]; then
+        FLAGS+=("--exclude=.git*")
+    fi
+
+    if [ "$FILE_CHANNEL_REUSE" != "0" ]; then
+        FLAGS+=("-e"
+            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -i $KEY_PATH")
+    fi
+
     FLAGS+=("." "root@$2:~/cloudy/")
 
     rsync "${FLAGS[@]}"
@@ -53,7 +81,8 @@ m_scp(){
     if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
         FLAGS+=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
-        "-o" "ControlPath=~/.ssh/master-$1")
+        "-o" "ControlPath=~/.ssh/master-$1"
+        "-i" "$KEY_PATH")
     fi
     FLAGS+=("root@$2:~/cloudy/$3" "./$3")
 
@@ -91,10 +120,10 @@ cmd_init(){
         | sed 's/../&:/g;s/:$//')
 
     RANDOM_ID=`head /dev/urandom | tr -dc A-Za-z | head -c16`
-    DROPLET=cloudy-$RANDOM_ID
-    echo "Starting $DROPLET..."
+    ID=cloudy-$RANDOM_ID
+    echo "Starting $ID..."
 
-    IP=$(doctl compute droplet create $DROPLET \
+    IP=$(doctl compute droplet create $ID \
         --region $REGION \
         --image ubuntu-18-04-x64 \
         --size $SIZE \
@@ -105,19 +134,19 @@ cmd_init(){
 
     echo "Droplet started."
 
-    # TODO: maybe DO will finally push fingerprint via API
+    # TODO: maybe DO will start pushings fingerprint via API one day
     ssh-keyscan $IP >> ~/.ssh/known_hosts
 
     echo "Setting up server..."
 
     # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
-    m_ssh $DROPLET $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile"
+    m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile"
 
-    m_rsync $DROPLET $IP &
+    m_rsync $ID $IP &
 
     if [ -f $LOCAL_INIT ]; then
-        m_ssh $DROPLET $IP " apt-get update"
-        m_ssh $DROPLET $IP " bash -ls" < $LOCAL_INIT
+        m_ssh $ID $IP " apt-get update"
+        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
     fi
 
     echo "Waiting for files to finish transferring..."
@@ -125,67 +154,34 @@ cmd_init(){
 
     echo "Done."
 
-    echo "$DROPLET $IP" > $LOCAL_LOCKFILE
+    echo "$ID $IP" > $LOCAL_LOCKFILE
 }
 
 cmd_reinit(){
-    if [ ! -f $LOCAL_LOCKFILE ]; then
-        echo "Server not running!"
-        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
-        exit 1
-    fi
-
-    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
-    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
-
+    assert_lockfile_present
     if [ ! -f $LOCAL_INIT ]; then
         echo "Did not find $LOCAL_INIT!"
         exit 1
     fi
-
-    m_ssh $DROPLET $IP " apt-get update"
-    m_ssh $DROPLET $IP " bash -ls" < $LOCAL_INIT
+    m_ssh $ID $IP " apt-get update"
+    m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
 }
 
 cmd_cmd(){
-    if [ ! -f $LOCAL_LOCKFILE ]; then
-        echo "Server not running!"
-        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
-        exit 1
-    fi
-
-    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
-    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
-
-    m_rsync $DROPLET $IP
-
-    CMD=" cd cloudy; $@"
-    m_ssh $DROPLET $IP " bash -ls -c \"$CMD\""
+    assert_lockfile_present
+    m_rsync $ID $IP
+    m_ssh $ID $IP " bash -ls -c \" cd cloudy; $@\""
 }
 
 cmd_get(){
-    if [ ! -f $LOCAL_LOCKFILE ]; then
-        echo "Server not running!"
-        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
-        exit 1
-    fi
-
-    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
-    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
-
-    m_scp $DROPLET $IP $1
+    assert_lockfile_present
+    m_scp $ID $IP $1
 }
 
 cmd_stop(){
-    if [ ! -f $LOCAL_LOCKFILE ]; then
-        echo "Server not running!"
-        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
-        exit 1
-    fi
-
-    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    assert_lockfile_present
     rm $LOCAL_LOCKFILE
-    doctl compute droplet delete $DROPLET -f
+    doctl compute droplet delete $ID -f
 }
 
 subcommand=$1
