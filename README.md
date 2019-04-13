@@ -103,6 +103,14 @@ tar -C / -c --exclude-ignore=.gitignore -z -f - . \
     | ssh $IP tar -C / -x -f -
 ```
 
+## My other projects
+
+- voice_over_Mumble - use your phone as Linux microphone
+- x11-input-supercharger - middle-mouse-click scrolling mode, conditional key
+  rebinding when using Wacom tablet
+- x11-input-mirror - broadcast X11 input events, replay them real-time on other machines
+- TODO:
+
 ## Resources used
 
 - https://gist.github.com/waylan/4080362
