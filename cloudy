@@ -35,7 +35,7 @@ m_ssh(){
 }
 
 m_rsync(){
-    FLAGS=("-r" "-t" # t - timestamps
+    FLAGS=("-r" "-t" "-p" # t - timestamps, p - permissions
         "--exclude=.git*"
         "--exclude=.cloudy*"
         "--filter=:- .gitignore")
@@ -49,7 +49,7 @@ m_rsync(){
 }
 
 m_scp(){
-    declare -a FLAGS # empty array
+    FLAGS=("-p") # preserve timestamps and modes
     if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
         FLAGS+=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
@@ -64,14 +64,17 @@ m_scp(){
 }
 
 print_help(){
-    echo "Cloudy - set up VPS and run commands in it"
-    echo "  Sends your current directory!"
+    echo "Cloudy - set up VPS and run your workflow on it."
+    echo "  Sends your current working directory, by default"
+    echo "  without .gitignore-d files and .git. See project"
+    echo "  website for config."
     echo ""
     echo "Subcommands:"
-    echo "  init"
-    echo "  cmd <COMMAND...>"
-    echo "  get <PATH>"
-    echo "  stop"
+    echo "  init - starts remote server"
+    echo "  reinit - executes $LOCAL_INIT on existing server"
+    echo "  cmd <COMMAND...> - runs command on remote server"
+    echo "  get <PATH> - downloads file off existing server"
+    echo "  stop - stops server"
 }
 
 cmd_init(){
