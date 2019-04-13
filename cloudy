@@ -36,6 +36,8 @@ if [ -f $LOCAL_LOCKFILE ]; then
     IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
 fi
 
+# Utilities
+
 assert_lockfile_present(){
     if [ ! -f $LOCAL_LOCKFILE ]; then
         echo "Server not running!"
@@ -91,6 +93,8 @@ m_scp(){
 
     scp "${FLAGS[@]}"
 }
+
+# Subcommands
 
 print_help(){
     echo "Cloudy - set up VPS and run your workflow on it."
