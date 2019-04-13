@@ -1,0 +1,203 @@
+#!/bin/bash
+set -e
+
+# Constants
+
+GLOBAL_CONF=~/.cloudy
+LOCAL_CONF=.cloudy
+LOCAL_INIT=.cloudy-init.sh
+LOCAL_LOCKFILE=.cloudy-server-running~
+
+# Defaults
+
+KEY_PATH=~/.ssh/id_rsa
+REGION=fra1
+# SIZE=s-2vcpu-4
+SIZE=1gb
+FILE_CHANNEL_REUSE=1 # https://github.com/symfony/symfony/issues/25580
+
+# Load config
+
+if [ -f $GLOBAL_CONF ]; then
+    . $GLOBAL_CONF
+fi
+
+if [ -f $LOCAL_CONF ]; then
+    . $LOCAL_CONF
+fi
+
+m_ssh(){
+    FLAGS=("-o" "ControlMaster=auto"
+        "-o" "ControlPersist=600"
+        "-o" "ControlPath=~/.ssh/master-$1"
+        "root@$2" "$3")
+    ssh "${FLAGS[@]}"
+}
+
+m_rsync(){
+    FLAGS=("-r" "-t" # t - timestamps
+        "--exclude=.git*"
+        "--exclude=.cloudy*"
+        "--filter=:- .gitignore")
+    if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
+        FLAGS+=("-e"
+            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1")
+    fi
+    FLAGS+=("." "root@$2:~/cloudy/")
+
+    rsync "${FLAGS[@]}"
+}
+
+m_scp(){
+    declare -a FLAGS # empty array
+    if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
+        FLAGS+=("-o" "ControlMaster=auto"
+        "-o" "ControlPersist=600"
+        "-o" "ControlPath=~/.ssh/master-$1")
+    fi
+    FLAGS+=("root@$2:~/cloudy/$3" "./$3")
+
+    OUTPUT_DIR=$(dirname $3)
+    mkdir -p $OUTPUT_DIR
+
+    scp "${FLAGS[@]}"
+}
+
+print_help(){
+    echo "Cloudy - set up VPS and run commands in it"
+    echo "  Sends your current directory!"
+    echo ""
+    echo "Subcommands:"
+    echo "  init"
+    echo "  cmd <COMMAND...>"
+    echo "  get <PATH>"
+    echo "  stop"
+}
+
+cmd_init(){
+    if [ -f $LOCAL_LOCKFILE ]; then
+        echo "Server already running!"
+        echo "Check doctl and remove $LOCAL_LOCKFILE if it is not."
+        exit 1
+    fi
+
+    KEY=$(awk "{print \$2}" "$KEY_PATH.pub" \
+        | openssl base64 -d \
+        | openssl md5 \
+        | cut -f2 -d' ' \
+        | sed 's/../&:/g;s/:$//')
+
+    RANDOM_ID=`head /dev/urandom | tr -dc A-Za-z | head -c16`
+    DROPLET=cloudy-$RANDOM_ID
+    echo "Starting $DROPLET..."
+
+    IP=$(doctl compute droplet create $DROPLET \
+        --region $REGION \
+        --image ubuntu-18-04-x64 \
+        --size $SIZE \
+        --ssh-keys $KEY \
+        --output=json \
+        --wait \
+        | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['networks']['v4'][0]['ip_address'])")
+
+    echo "Droplet started."
+
+    # TODO: maybe DO will finally push fingerprint via API
+    ssh-keyscan $IP >> ~/.ssh/known_hosts
+
+    echo "Setting up server..."
+
+    # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
+    m_ssh $DROPLET $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile"
+
+    m_rsync $DROPLET $IP &
+
+    if [ -f $LOCAL_INIT ]; then
+        m_ssh $DROPLET $IP " apt-get update"
+        m_ssh $DROPLET $IP " bash -ls" < $LOCAL_INIT
+    fi
+
+    echo "Waiting for files to finish transferring..."
+    wait
+
+    echo "Done."
+
+    echo "$DROPLET $IP" > $LOCAL_LOCKFILE
+}
+
+cmd_reinit(){
+    if [ ! -f $LOCAL_LOCKFILE ]; then
+        echo "Server not running!"
+        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
+        exit 1
+    fi
+
+    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
+
+    if [ ! -f $LOCAL_INIT ]; then
+        echo "Did not find $LOCAL_INIT!"
+        exit 1
+    fi
+
+    m_ssh $DROPLET $IP " apt-get update"
+    m_ssh $DROPLET $IP " bash -ls" < $LOCAL_INIT
+}
+
+cmd_cmd(){
+    if [ ! -f $LOCAL_LOCKFILE ]; then
+        echo "Server not running!"
+        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
+        exit 1
+    fi
+
+    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
+
+    m_rsync $DROPLET $IP
+
+    CMD=" cd cloudy; $@"
+    m_ssh $DROPLET $IP " bash -ls -c \"$CMD\""
+}
+
+cmd_get(){
+    if [ ! -f $LOCAL_LOCKFILE ]; then
+        echo "Server not running!"
+        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
+        exit 1
+    fi
+
+    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
+
+    m_scp $DROPLET $IP $1
+}
+
+cmd_stop(){
+    if [ ! -f $LOCAL_LOCKFILE ]; then
+        echo "Server not running!"
+        echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
+        exit 1
+    fi
+
+    DROPLET=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    rm $LOCAL_LOCKFILE
+    doctl compute droplet delete $DROPLET -f
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        print_help
+        ;;
+    *)
+        shift
+        cmd_${subcommand} $@
+        if [ $? = 127 ]; then
+            echo "Unknown subcommand."
+            echo "Run with \"--help\" for help."
+            exit 1
+        fi
+        ;;
+esac
+exit 0
