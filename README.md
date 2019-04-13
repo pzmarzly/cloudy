@@ -86,7 +86,8 @@ SEND_GIT=0
 ## TODO
 
 - add option to use `mosh`
-- `BACKEND=rsync`/`tar` - does anyone need it `tar`?
+- `cloudy get` directories
+- `tar` instead of scp or rclone
 
 ```bash
 # -C / - paths relative to /
@@ -98,8 +99,6 @@ SEND_GIT=0
 tar -C / -c --exclude-ignore=.gitignore -z -f - . \
     | ssh $IP tar -C / -x -f -
 ```
-
-- `SEND_ALL=yes` - send all files
 
 ## Resources used
 
