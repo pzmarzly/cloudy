@@ -39,7 +39,7 @@ fi
 
 # Utilities
 
-assert_lockfile_present(){
+assert_lockfile_present() {
     if [ ! -f $LOCAL_LOCKFILE ]; then
         echo "Server not running!"
         echo "$LOCAL_LOCKFILE was not found. Start with \"cloudy init\"."
@@ -47,7 +47,7 @@ assert_lockfile_present(){
     fi
 }
 
-assert_lockfile_absent(){
+assert_lockfile_absent() {
     if [ -f $LOCAL_LOCKFILE ]; then
         echo "Server already running!"
         echo "Check server status and remove $LOCAL_LOCKFILE if it is not."
@@ -57,7 +57,7 @@ assert_lockfile_absent(){
 
 # Network utilities
 
-m_ssh(){
+m_ssh() {
     FLAGS=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
         "-o" "ControlPath=~/.ssh/master-$1"
@@ -66,7 +66,7 @@ m_ssh(){
     ssh "${FLAGS[@]}"
 }
 
-m_rsync(){
+m_rsync() {
     FLAGS=("-r" "-t" "-p") # t - timestamps, p - permissions
 
     if [ "$SEND_CLOUDY" == "0" ]; then
@@ -89,7 +89,7 @@ m_rsync(){
     rsync "${FLAGS[@]}"
 }
 
-m_rev_rsync(){
+m_rev_rsync() {
     FLAGS=("-r" "-t" "-p")
 
     if [ "$FILE_CHANNEL_REUSE" != "0" ]; then
@@ -112,7 +112,7 @@ m_rev_rsync(){
 
 ## Help
 
-print_help(){
+print_help() {
     echo "Cloudy - set up VPS and run your workflow on it. Sends your current working"
     echo "  directory, by default without .gitignore-d files and .git. See project's"
     echo "  Github page for config."
@@ -131,11 +131,11 @@ print_help(){
 
 ## Init
 
-random_id(){
+random_id() {
     head /dev/urandom | tr -dc A-Za-z | head -c16
 }
 
-run_init(){
+run_init() {
     if [ -f $GLOBAL_INIT ] || [ -f $LOCAL_INIT ]; then
         m_ssh $ID $IP " apt-get update"
     fi
@@ -149,7 +149,7 @@ run_init(){
     fi
 }
 
-server_setup(){
+server_setup() {
     echo "Setting up server..."
 
     # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
@@ -166,7 +166,7 @@ server_setup(){
     echo "$ID $IP" > $LOCAL_LOCKFILE
 }
 
-cmd_order(){
+cmd_order() {
     assert_lockfile_absent
 
     KEY=$(awk "{print \$2}" "$KEY_PATH.pub" \
@@ -195,7 +195,7 @@ cmd_order(){
     server_setup
 }
 
-cmd_use(){
+cmd_use() {
     assert_lockfile_absent
     IP=$1
     ID=cloudy-server-`random_id`
@@ -205,12 +205,12 @@ cmd_use(){
 
 ## Control
 
-cmd_reinit(){
+cmd_reinit() {
     assert_lockfile_present
     run_init
 }
 
-cmd_cmd(){
+cmd_cmd() {
     assert_lockfile_present
     m_rsync $ID $IP
     CMD=" cd cloudy; $@"
@@ -224,13 +224,13 @@ cmd_cmd-alt() {
     echo $CMD | m_ssh $ID $IP " bash -ls"
 }
 
-cmd_ssh(){
+cmd_ssh() {
     assert_lockfile_present
     m_rsync $ID $IP
     m_ssh $ID $IP
 }
 
-cmd_get(){
+cmd_get() {
     assert_lockfile_present
     if [ -z "$1" ]; then
         echo "Missing path."
@@ -243,7 +243,7 @@ cmd_get(){
     m_rev_rsync $ID $IP $1
 }
 
-cmd_stop(){
+cmd_stop() {
     assert_lockfile_present
     rm $LOCAL_LOCKFILE
     doctl compute droplet delete $ID -f
