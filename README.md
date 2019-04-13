@@ -8,8 +8,8 @@ Created since it's sometimes not worth it to buy expensive hardware (especially 
 
 ```text
 $ cd rust-example
-$ cloudy init
-Starting cloudy-eHMSsHFzHFXXMBbm...
+$ cloudy order
+Starting cloudy-droplet-eHMSsHFzHFXXMBbm...
 Droplet started.
 Setting up server...
 <cut>
@@ -44,7 +44,7 @@ $ cloudy stop
 
 Get `cloudy` bash script. Make sure you have bash, scp, rsync, openssl, doctl and Python 3.
 
-Log in to DigitalOcean CLI using `doctl auth init`.
+If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
 
 You are ready to go, but you may want to do the configuration.
 
