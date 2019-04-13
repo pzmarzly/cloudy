@@ -46,6 +46,16 @@ assert_lockfile_present(){
     fi
 }
 
+assert_lockfile_absent(){
+    if [ -f $LOCAL_LOCKFILE ]; then
+        echo "Server already running!"
+        echo "Check server status and remove $LOCAL_LOCKFILE if it is not."
+        exit 1
+    fi
+}
+
+# Network utilities
+
 m_ssh(){
     FLAGS=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
@@ -96,55 +106,36 @@ m_scp(){
 
 # Subcommands
 
+## Help
+
 print_help(){
     echo "Cloudy - set up VPS and run your workflow on it."
     echo "  Sends your current working directory, by default"
     echo "  without .gitignore-d files and .git. See project"
     echo "  website for config."
     echo ""
-    echo "Subcommands:"
-    echo "  init - starts remote server"
-    echo "  reinit - executes $LOCAL_INIT on existing server"
-    echo "  cmd <COMMAND...> - runs command on remote server"
-    echo "  get <PATH> - downloads file off existing server"
+    echo "Subcommands - init:"
+    echo "  order - starts new server on DigitalOcean"
+    echo "  use <[USER@]IP or NAME> - connects to server."
+    echo "    NAME must be in ~/.ssh/config"
+    echo "Subcommands - control:"
+    echo "  reinit - reexecutes $LOCAL_INIT on server"
+    echo "  cmd <COMMAND...> - runs command on server"
+    echo "  get <PATH> - downloads file off server"
     echo "  stop - stops server"
 }
 
-cmd_init(){
-    if [ -f $LOCAL_LOCKFILE ]; then
-        echo "Server already running!"
-        echo "Check doctl and remove $LOCAL_LOCKFILE if it is not."
-        exit 1
-    fi
+## Init
 
-    KEY=$(awk "{print \$2}" "$KEY_PATH.pub" \
-        | openssl base64 -d \
-        | openssl md5 \
-        | cut -f2 -d' ' \
-        | sed 's/../&:/g;s/:$//')
+random_id(){
+    head /dev/urandom | tr -dc A-Za-z | head -c16
+}
 
-    RANDOM_ID=`head /dev/urandom | tr -dc A-Za-z | head -c16`
-    ID=cloudy-$RANDOM_ID
-    echo "Starting $ID..."
-
-    IP=$(doctl compute droplet create $ID \
-        --region $REGION \
-        --image ubuntu-18-04-x64 \
-        --size $SIZE \
-        --ssh-keys $KEY \
-        --output=json \
-        --wait \
-        | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['networks']['v4'][0]['ip_address'])")
-
-    echo "Droplet started."
-
-    # TODO: maybe DO will start pushing fingerprint via API one day
-    ssh-keyscan $IP >> ~/.ssh/known_hosts
-
+server_setup(){
     echo "Setting up server..."
 
     # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
-    m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile"
+    m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile | true"
 
     m_rsync $ID $IP &
 
@@ -160,6 +151,45 @@ cmd_init(){
 
     echo "$ID $IP" > $LOCAL_LOCKFILE
 }
+
+cmd_order(){
+    assert_lockfile_absent
+
+    ID=cloudy-droplet-`random_id`
+    echo "Starting $ID..."
+
+    KEY=$(awk "{print \$2}" "$KEY_PATH.pub" \
+        | openssl base64 -d \
+        | openssl md5 \
+        | cut -f2 -d' ' \
+        | sed 's/../&:/g;s/:$//')
+
+    IP=$(doctl compute droplet create $ID \
+        --region $REGION \
+        --image ubuntu-18-04-x64 \
+        --size $SIZE \
+        --ssh-keys $KEY \
+        --output=json \
+        --wait \
+        | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['networks']['v4'][0]['ip_address'])")
+
+    echo "Droplet started."
+
+    # TODO: maybe DO will start pushing fingerprint via API one day
+    ssh-keyscan $IP >> ~/.ssh/known_hosts
+
+    server_setup
+}
+
+cmd_use(){
+    assert_lockfile_absent
+    IP=$1
+    ID=cloudy-server-`random_id`
+    echo "Using $ID..."
+    server_setup
+}
+
+## Control
 
 cmd_reinit(){
     assert_lockfile_present
