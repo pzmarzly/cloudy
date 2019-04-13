@@ -197,6 +197,10 @@ cmd_order() {
 
 cmd_use() {
     assert_lockfile_absent
+    if [ -z "$1" ]; then
+        echo "Provide server IP or alias!"
+        exit 1
+    fi
     IP=$1
     ID=cloudy-server-`random_id`
     echo "Using $ID..."
