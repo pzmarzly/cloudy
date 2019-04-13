@@ -97,10 +97,13 @@ m_rev_rsync(){
             "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -i $KEY_PATH")
     fi
 
-    OUTPUT_DIR=$(dirname $3)
+    # strip trailing slash, otherwise rsync will merge directories
+    STRIPPED_PATH=$(echo ${3%/})
+
+    OUTPUT_DIR=$(dirname $STRIPPED_PATH)
     mkdir -p $OUTPUT_DIR
 
-    FLAGS+=("root@$2:~/cloudy/$3" "$OUTPUT_DIR")
+    FLAGS+=("root@$2:~/cloudy/$STRIPPED_PATH" "$OUTPUT_DIR")
 
     rsync "${FLAGS[@]}"
 }
@@ -223,6 +226,10 @@ cmd_get(){
     assert_lockfile_present
     if [ -z "$1" ]; then
         echo "Missing path."
+        exit 1
+    fi
+    if [ ${1:0:1} == "/" ] || [ ${1:0:1} == "~" ]; then
+        echo "Cannot download absolute paths"
         exit 1
     fi
     m_rev_rsync $ID $IP $1
