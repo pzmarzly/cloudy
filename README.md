@@ -61,7 +61,7 @@ local (`.cloudy`) config files. If both files exist, both are loaded, but option
 config have precedence over global ones.
 
 On server setup and after `cloudy reinit`, `~/.cloudy-init.sh` and `.cloudy-init.sh` are run on
-the server as root, if they exists.
+the server as root, if those files exists.
 
 ### Default configuration
 
