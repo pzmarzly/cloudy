@@ -251,7 +251,7 @@ cmd_stop(){
 
 subcommand=$1
 case $subcommand in
-    "" | "-h" | "--help")
+    "" | "-h" | "--help" | "help")
         print_help
         ;;
     *)

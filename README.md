@@ -92,6 +92,26 @@ SEND_GITIGNORE=0
 SEND_GIT=0
 ```
 
+## Commands
+
+```text
+$ cloudy # or cloudy help, cloudy -h, cloudy --help
+Cloudy - set up VPS and run your workflow on it. Sends your current working
+  directory, by default without .gitignore-d files and .git. See project's
+  Github page for config.
+
+Subcommands - init:
+  order - starts new server on DigitalOcean
+  use <[USER@]IP or NAME> - connects to server. NAME must be in ~/.ssh/config
+Subcommands - control:
+  reinit - reexecutes .cloudy-init.sh on server
+  cmd <COMMAND...> - runs command on server. Interactive shell
+  cmd-alt <COMMAND...> - runs command on server. Non-interactive shell
+  ssh - opens shell on server
+  get <PATH> - downloads file off server
+  stop - stops server
+```
+
 ## Interactive `cloudy cmd` problem
 
 - `cloudy cmd touch 'a b'` creates 2 files
