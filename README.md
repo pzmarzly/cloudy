@@ -57,6 +57,8 @@ config have precedence over global ones.
 On server setup and after `cloudy reinit`, `~/.cloudy-init.sh` and `.cloudy-init.sh` are run on
 the server as root, if they exists.
 
+TODO: gitignore global tempfile
+
 ### Default configuration
 
 ```bash
@@ -85,6 +87,22 @@ SEND_GITIGNORE=0
 # Send .git directory.
 SEND_GIT=0
 ```
+
+## Interactive `cloudy cmd` problem
+
+- `cloudy cmd touch 'a b'` creates 2 files
+- `cloudy cmd touch "a b"` creates 2 files
+- `cloudy cmd touch a\\ b` creates 1 file `a b`
+- `cloudy cmd touch \"a b\"` creates 1 file `a`
+
+Since it is suboptimal, there is `cloudy cmd-alt` subcommand, but it is non-interactive,
+meaning STDIN is null, meaning programs cannot ask you for input (so e.g. `apt-get` needs
+to be used with `-y` parameter, just like in `.cloudy-init.sh` BTW).
+
+- `cloudy cmd-alt touch 'a b'` creates 2 files
+- `cloudy cmd-alt touch "a b"` creates 2 files
+- `cloudy cmd-alt touch a\\ b` creates 1 file `a b`
+- `cloudy cmd-alt touch \"a b\"` creates 1 file `a b`
 
 ## TODO
 

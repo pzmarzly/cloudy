@@ -122,7 +122,8 @@ print_help(){
     echo "  use <[USER@]IP or NAME> - connects to server. NAME must be in ~/.ssh/config"
     echo "Subcommands - control:"
     echo "  reinit - reexecutes $LOCAL_INIT on server"
-    echo "  cmd <COMMAND...> - runs command on server"
+    echo "  cmd <COMMAND...> - runs command on server. Interactive shell"
+    echo "  cmd-alt <COMMAND...> - runs command on server. Non-interactive shell"
     echo "  ssh - opens shell on server"
     echo "  get <PATH> - downloads file off server"
     echo "  stop - stops server"
@@ -214,6 +215,13 @@ cmd_cmd(){
     m_rsync $ID $IP
     CMD=" cd cloudy; $@"
     m_ssh $ID $IP " bash -ls -c \"$CMD\""
+}
+
+cmd_cmd-alt() {
+    assert_lockfile_present
+    m_rsync $ID $IP
+    CMD=" cd cloudy; $@"
+    echo $CMD | m_ssh $ID $IP " bash -ls"
 }
 
 cmd_ssh(){
