@@ -42,7 +42,7 @@ $ cloudy stop
 
 ## Installation
 
-Get `cloudy` bash script. Make sure you have bash, scp, rsync, openssl, doctl and Python 3.
+Get `cloudy` bash script. Make sure you have bash, rsync, openssl, doctl and Python 3.
 
 If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
 
@@ -72,8 +72,8 @@ REGION=fra1
 SIZE=s-1vcpu-1gb
 # Cloudy reuses SSH connections
 # for shell commands. It can also
-# share this connection with rsync
-# and scp, but there may be a rare bug:
+# share this connection with rsync,
+# but there may be a rare bug:
 # https://github.com/symfony/symfony/issues/25580
 # I haven't experienced it, so by default
 # it's on.
@@ -90,7 +90,7 @@ SEND_GIT=0
 
 - add option to use `mosh`
 - `cloudy get` directories
-- `tar` instead of scp or rclone
+- `tar` instead of rclone - probably unnecessary
 
 ```bash
 # -C / - paths relative to /

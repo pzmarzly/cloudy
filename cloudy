@@ -89,20 +89,20 @@ m_rsync(){
     rsync "${FLAGS[@]}"
 }
 
-m_scp(){
-    FLAGS=("-p") # preserve timestamps and modes
-    if [ "$FILE_CHANNEL_REUSE" == "1" ]; then
-        FLAGS+=("-o" "ControlMaster=auto"
-        "-o" "ControlPersist=600"
-        "-o" "ControlPath=~/.ssh/master-$1"
-        "-i" "$KEY_PATH")
+m_rev_rsync(){
+    FLAGS=("-r" "-t" "-p")
+
+    if [ "$FILE_CHANNEL_REUSE" != "0" ]; then
+        FLAGS+=("-e"
+            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -i $KEY_PATH")
     fi
-    FLAGS+=("root@$2:~/cloudy/$3" "./$3")
 
     OUTPUT_DIR=$(dirname $3)
     mkdir -p $OUTPUT_DIR
 
-    scp "${FLAGS[@]}"
+    FLAGS+=("root@$2:~/cloudy/$3" "$OUTPUT_DIR")
+
+    rsync "${FLAGS[@]}"
 }
 
 # Subcommands
@@ -222,10 +222,10 @@ cmd_ssh(){
 cmd_get(){
     assert_lockfile_present
     if [ -z "$1" ]; then
-        echo "Missing file path."
+        echo "Missing path."
         exit 1
     fi
-    m_scp $ID $IP $1
+    m_rev_rsync $ID $IP $1
 }
 
 cmd_stop(){
