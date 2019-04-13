@@ -42,11 +42,17 @@ $ cloudy stop
 
 ## Installation
 
-Get `cloudy` bash script. Make sure you have bash, rsync, openssl, doctl and Python 3.
+Get `cloudy` bash script. Make sure you have bash, rsync, openssl, doctl and Python 3. Then
+you are ready to go, but you may want to do more config.
 
 If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
 
-You are ready to go, but you may want to do the configuration.
+You may also want to set up global `.gitignore` and add `.cloudy-server-running~` there. Example:
+
+```bash
+git config --global core.excludesfile ~/.gitignore_global
+echo .cloudy-server-running~ >> ~/.gitignore_global
+```
 
 ## Configuration
 
@@ -56,8 +62,6 @@ config have precedence over global ones.
 
 On server setup and after `cloudy reinit`, `~/.cloudy-init.sh` and `.cloudy-init.sh` are run on
 the server as root, if they exists.
-
-TODO: gitignore global tempfile
 
 ### Default configuration
 
@@ -104,10 +108,12 @@ to be used with `-y` parameter, just like in `.cloudy-init.sh` BTW).
 - `cloudy cmd-alt touch a\\ b` creates 1 file `a b`
 - `cloudy cmd-alt touch \"a b\"` creates 1 file `a b`
 
+I recommend using `cloudy cmd` and `cloudy cmd-alt` only for small commands, to invoke some
+processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
+
 ## TODO
 
 - add option to use `mosh`
-- `cloudy get` directories
 - `tar` instead of rclone - probably unnecessary
 
 ```bash
@@ -123,21 +129,28 @@ tar -C / -c --exclude-ignore=.gitignore -z -f - . \
 
 ## My other projects
 
-- voice_over_Mumble - use your phone as Linux microphone
-- x11-input-supercharger - middle-mouse-click scrolling mode, conditional key
-  rebinding when using Wacom tablet
-- x11-input-mirror - broadcast X11 input events, replay them real-time on other machines
-- TODO:
+- [mic_over_Mumble](https://github.com/pzmarzly/mic_over_mumble) - use your phone as Linux microphone
+- [x11-input-supercharger](https://github.com/pzmarzly/x11-input-supercharger) - middle-mouse-click
+  scrolling mode, conditional key rebinding when using Wacom tablet
+- [x11-input-mirror](https://github.com/pzmarzly/x11-input-mirror) - broadcast X11 input events,
+  replay them real-time on other machines
+- [movie library](https://github.com/movie-rs/movie) - actor system for Rust
+- [portforwarder-rs](https://github.com/pzmarzly/portforwarder-rs) - CLI port opener for
+  UPnP-enabled routers
+- [Raspberry Pi video grabbing and livestreaming](https://pzmarzly.pl/2018/03/17/raspberry-pi-livestreaming.html)
+- [yoke - Android as Linux gamepad](https://github.com/rmst/yoke)
+- [sshfs manager](https://github.com/pzmarzly/sshfs-manager) - alpha
 
 ## Resources used
 
-- https://gist.github.com/waylan/4080362
-- https://serverfault.com/a/775193/449626
-- https://stackoverflow.com/a/46704718/5108318
-- https://stackoverflow.com/a/2732991/5108318
-- https://stackoverflow.com/a/15373763/5108318
-- https://stackoverflow.com/a/8400375/5108318
-- https://stackoverflow.com/a/19122890/5108318
-- https://superuser.com/a/1160074/620906
-- https://stackoverflow.com/a/20410383/5108318
-- https://stackoverflow.com/a/1951523/5108318
+- [bash subcommands](https://gist.github.com/waylan/4080362)
+- [SSH key digest](https://serverfault.com/a/775193/449626)
+- [bash is_set](https://stackoverflow.com/a/46704718/5108318)
+- [run script remotely](https://stackoverflow.com/a/2732991/5108318)
+- [rsync exclude](https://stackoverflow.com/a/15373763/5108318)
+- [Python JSON parse](https://stackoverflow.com/a/8400375/5108318)
+- [bash arrays](https://stackoverflow.com/a/19122890/5108318)
+- ["ttyname failed" Ubuntu bug](https://superuser.com/a/1160074/620906)
+- [SSH multiplexing](https://stackoverflow.com/a/20410383/5108318)
+- [bash arrays - push_back](https://stackoverflow.com/a/1951523/5108318)
+- [bash OR](https://stackoverflow.com/a/8972266/5108318)
