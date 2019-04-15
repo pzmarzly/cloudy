@@ -140,8 +140,9 @@ m_x2go() {
 
 print_help() {
     echo "Cloudy - set up VPS and run your workflow on it. Sends your current working"
-    echo "  directory, by default without .gitignore-d files and .git. See project's"
-    echo "  Github page for config."
+    echo "  directory, by default without .gitignore-d files and .git."
+    echo ""
+    echo "See https://github.com/pzmarzly/cloudy for more details and config guide."
     echo ""
     echo "Subcommands - init:"
     echo "  order - starts new server on DigitalOcean"
@@ -154,6 +155,13 @@ print_help() {
     echo "  get <PATH> - downloads file off server"
     echo "  x2go <COMMAND...> - runs GUI command on server, streams back the result"
     echo "  stop - stops DigitalOcean server"
+    echo "Subcommands - misc:"
+    echo "  help / --help / -h - prints this notice"
+    echo "  version / --version / -v - prints version"
+}
+
+print_version() {
+    echo "Cloudy 0.1.0"
 }
 
 ## Init
@@ -319,6 +327,9 @@ subcommand=$1
 case $subcommand in
     "" | "-h" | "--help" | "help")
         print_help
+        ;;
+    "-v" | "--version" | "version")
+        print_version
         ;;
     *)
         shift
