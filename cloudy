@@ -108,6 +108,15 @@ m_rev_rsync() {
     rsync "${FLAGS[@]}"
 }
 
+m_x2go() {
+    FLAGS=("--server" "$2"
+        "--user" "root"
+        "--command" "$3"
+        "--terminate-on-ctrl-c"
+        "--ssh-privkey" "$KEY_PATH")
+    pyhoca-cli "${FLAGS[@]}"
+}
+
 # Subcommands
 
 ## Help
@@ -248,6 +257,17 @@ cmd_get() {
         exit 1
     fi
     m_rev_rsync $ID $IP $1
+}
+
+cmd_x2go() {
+    assert_lockfile_present
+    if [ -z "$1" ]; then
+        echo "Provide a program to run!"
+        exit 1
+    fi
+    m_rsync $ID $IP
+    CMD="$@"
+    m_x2go $ID $IP $CMD
 }
 
 cmd_stop() {
