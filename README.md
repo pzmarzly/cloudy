@@ -109,6 +109,7 @@ Subcommands - control:
   cmd-alt <COMMAND...> - runs command on server. Non-interactive shell
   ssh - opens shell on server
   get <PATH> - downloads file off server
+  x2go <COMMAND...> - runs GUI command on server, streams back the result
   stop - stops DigitalOcean server
 ```
 

@@ -135,6 +135,7 @@ print_help() {
     echo "  cmd-alt <COMMAND...> - runs command on server. Non-interactive shell"
     echo "  ssh - opens shell on server"
     echo "  get <PATH> - downloads file off server"
+    echo "  x2go <COMMAND...> - runs GUI command on server, streams back the result"
     echo "  stop - stops DigitalOcean server"
 }
 
