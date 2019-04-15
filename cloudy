@@ -307,11 +307,6 @@ case $subcommand in
     *)
         shift
         cmd_${subcommand} $@
-        if [ $? = 127 ]; then
-            echo "Unknown subcommand."
-            echo "Run with \"--help\" for help."
-            exit 1
-        fi
         ;;
 esac
 exit 0
