@@ -136,7 +136,7 @@ processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
 - add option to use `mosh`
 - search parent directories for `.cloudy-server-running`
 - global `.cloudy-server-running` database as an option
-- `tar` instead of rclone - probably unnecessary
+- `tar` instead of `rclone` - probably unnecessary
 
 ```bash
 # -C / - paths relative to /
