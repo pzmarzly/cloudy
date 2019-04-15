@@ -8,6 +8,7 @@ GLOBAL_INIT=~/.cloudy-init.sh
 LOCAL_CONF=.cloudy
 LOCAL_INIT=.cloudy-init.sh
 LOCAL_LOCKFILE=.cloudy-server-running
+SERVER_SIDE_UTILS_DIR=/cloudy-bin
 
 # Defaults
 
@@ -146,27 +147,16 @@ random_id() {
 }
 
 run_init() {
-    UTILS_CMD="
-        install_x2go() {                                                                         \\n
-            add-apt-repository ppa:x2go/stable -y                                                \\n
-            apt-get install x2goserver x2goserver-xsession -y                                    \\n
-        }                                                                                        \\n
-        install_rust() {                                                                         \\n
-            apt-get install build-essential -y                                                   \\n
-            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain \${1:-stable} -y       \\n
-        }                                                                                        \\n
-    "
-
     if [ -f $GLOBAL_INIT ] || [ -f $LOCAL_INIT ]; then
         m_ssh $ID $IP " apt-get update"
     fi
 
     if [ -f $GLOBAL_INIT ]; then
-        echo -e $UTILS_CMD | cat - $GLOBAL_INIT | m_ssh $ID $IP " bash -ls"
+        m_ssh $ID $IP " bash -ls" < $GLOBAL_INIT
     fi
 
     if [ -f $LOCAL_INIT ]; then
-        echo -e $UTILS_CMD | cat - $LOCAL_INIT | m_ssh $ID $IP " bash -ls"
+        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
     fi
 }
 
@@ -175,6 +165,27 @@ server_setup() {
 
     # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
     m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile | true"
+
+    SSUD=$(echo $SERVER_SIDE_UTILS_DIR)
+    UTILS_CMD="
+        if [ -e $SSUD ]; then
+            exit 0
+        fi
+        mkdir -p $SSUD
+
+        echo add-apt-repository ppa:x2go/stable -y >> $SSUD/install_x2go
+        echo apt-get install x2goserver x2goserver-xsession -y >> $SSUD/install_x2go
+        chmod +x $SSUD/install_x2go
+
+        echo apt-get install build-essential -y >> $SSUD/install_rust
+        echo curl https://sh.rustup.rs -sSf \\| sh -s -- --default-toolchain none -y >> $SSUD/install_rust
+        echo /root/.cargo/bin/rustup toolchain add \${1:-stable} >> $SSUD/install_rust
+        chmod +x $SSUD/install_rust
+
+        echo PATH=$SSUD:\$PATH >> /root/.profile
+    "
+
+    echo "$UTILS_CMD" | m_ssh $ID $IP " bash -ls"
 
     m_rsync $ID $IP &
     run_init

@@ -1,2 +1,1 @@
 install_rust stable
-install_x2go
