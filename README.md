@@ -5,7 +5,7 @@ directory (`.gitignore`-d files can be excluded), then runs commands (e.g. build
 
 Also provides shortcut for running X2GO.
 
-Created since it's sometimes not worth it to buy expensive hardware (especially laptops).
+Created since it's sometimes not worth it to own expensive hardware (especially laptops).
 
 ## Demo
 
@@ -152,6 +152,7 @@ processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
 - add option to use `mosh`
 - search parent directories for `.cloudy-server-running`
 - global `.cloudy-server-running` database as an option
+- use `curl` instead of `doctl`
 - `tar` instead of `rclone` - probably unnecessary
 
 ```bash
