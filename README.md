@@ -185,3 +185,4 @@ tar -C / -c --exclude-ignore=.gitignore -z -f - . \
 - [SSH multiplexing](https://stackoverflow.com/a/20410383/5108318)
 - [bash arrays - push_back](https://stackoverflow.com/a/1951523/5108318)
 - [bash OR](https://stackoverflow.com/a/8972266/5108318)
+- [bash default argument value](https://stackoverflow.com/a/9333006/5108318)

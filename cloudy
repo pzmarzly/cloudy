@@ -146,16 +146,27 @@ random_id() {
 }
 
 run_init() {
+    UTILS_CMD="
+        install_x2go() {                                                                         \\n
+            add-apt-repository ppa:x2go/stable -y                                                \\n
+            apt-get install x2goserver x2goserver-xsession -y                                    \\n
+        }                                                                                        \\n
+        install_rust() {                                                                         \\n
+            apt-get install build-essential -y                                                   \\n
+            curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain \${1:-stable} -y       \\n
+        }                                                                                        \\n
+    "
+
     if [ -f $GLOBAL_INIT ] || [ -f $LOCAL_INIT ]; then
         m_ssh $ID $IP " apt-get update"
     fi
 
     if [ -f $GLOBAL_INIT ]; then
-        m_ssh $ID $IP " bash -ls" < $GLOBAL_INIT
+        echo -e $UTILS_CMD | cat - $GLOBAL_INIT | m_ssh $ID $IP " bash -ls"
     fi
 
     if [ -f $LOCAL_INIT ]; then
-        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
+        echo -e $UTILS_CMD | cat - $LOCAL_INIT | m_ssh $ID $IP " bash -ls"
     fi
 }
 
