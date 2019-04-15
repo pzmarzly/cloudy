@@ -15,20 +15,20 @@ $ cloudy order
 Starting cloudy-droplet-eHMSsHFzHFXXMBbm...
 Droplet started.
 Setting up server...
-<cut>
+<cut: apt-get output, rustup output (due to .cloudy-init.sh)>
 Rust is installed now. Great!
-<cut>
+<cut: more rustup output>
 Waiting for files to finish transferring...
 Done.
 $ cloudy cmd ls -alh
-total 24K
+total 20K
 drwxr-xr-x 4 root root 4.0K Apr 13 17:45 .
 drwx------ 8 root root 4.0K Apr 13 17:44 ..
 -rw-r--r-- 1 root root  133 Apr 13 17:42 Cargo.lock
 -rw-r--r-- 1 root root  123 Apr 13 18:20 Cargo.toml
 drwxr-xr-x 2 root root 4.0K Apr 13 16:42 src
 $ cloudy cmd cargo build
-    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
+    Finished dev [unoptimized + debuginfo] target(s) in 1.86s
 $ cloudy cmd ls -alh
 total 24K
 drwxr-xr-x 4 root root 4.0K Apr 13 17:45 .
@@ -37,9 +37,13 @@ drwx------ 8 root root 4.0K Apr 13 17:44 ..
 -rw-r--r-- 1 root root  123 Apr 13 18:20 Cargo.toml
 drwxr-xr-x 2 root root 4.0K Apr 13 16:42 src
 drwxr-xr-x 3 root root 4.0K Apr 13 18:20 target
-$ cloudy get target/debug/rust-example
+$ cloudy get target/debug/rust-example # you can also grab whole folders
 $ target/debug/rust-example
 Hello, world!
+$ cloudy cmd install_x2go
+<cut: apt-get output>
+$ cloudy x2go xclock
+<cut: pyhoca-cli output>
 $ cloudy stop
 ```
 
