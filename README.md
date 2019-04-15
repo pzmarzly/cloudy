@@ -2,6 +2,9 @@
 
 Starts up VPS on Digital Ocean or connects to machine you specified, synchronizes current working
 directory (`.gitignore`-d files can be excluded), then runs commands (e.g. builds) on VPS.
+
+Also provides shortcut for running X2GO.
+
 Created since it's sometimes not worth it to buy expensive hardware (especially laptops).
 
 ## Demo
@@ -46,6 +49,8 @@ Get `cloudy` bash script. Make sure you have bash, rsync, openssl, doctl and Pyt
 you are ready to go, but you may want to do more config.
 
 If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
+
+If you want to use X2GO, install `pyhoca-cli`.
 
 You may also want to set up global `.gitignore` and add `.cloudy-server-running` there. Example:
 
@@ -134,6 +139,9 @@ processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
 
 ## TODO
 
+- automatically send new files (right now `rsync` is run on every `cloudy` invocation, but nobody
+  would like to reset X11 programs when they want to push new files. Workaround: `cloudy cmd true`
+  to push files)
 - add option to use `mosh`
 - search parent directories for `.cloudy-server-running`
 - global `.cloudy-server-running` database as an option
