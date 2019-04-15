@@ -68,6 +68,9 @@ config have precedence over global ones.
 On server setup and after `cloudy reinit`, `~/.cloudy-init.sh` and `.cloudy-init.sh` are run on
 the server as root, if those files exists.
 
+There are currently 2 helper scripts that you can use on remote server - `install_rust` and
+`install_x2go`. They are in `PATH`, you can invoke them in `.cloudy-init.sh` or via `cloudy cmd`.
+
 ### Default configuration
 
 ```bash
