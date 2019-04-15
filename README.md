@@ -1,4 +1,4 @@
-# Cloudy - run your workflow in cloud
+# Cloudy - supercharge your workflow with cloud workers
 
 Starts up VPS on Digital Ocean or connects to machine you specified, synchronizes current working
 directory (`.gitignore`-d files can be excluded), then runs commands (e.g. builds) on VPS.
@@ -49,8 +49,11 @@ $ cloudy stop
 
 ## Installation
 
-Get `cloudy` bash script. Make sure you have bash, rsync, openssl, doctl and Python 3. Then
-you are ready to go, but you may want to do more config.
+Get `cloudy` bash script. Nothing else in this repo is required, but you are welcome to check out
+example in [rust-example](rust-example/), which is "Hello world" + Cloudy config.
+
+Make sure you have bash, rsync, openssl, doctl and Python 3. Then you are ready to go, but you may
+want to learn how to write custom config for your projects.
 
 If you want to use `cloudy order`, log in to DigitalOcean CLI using `doctl auth init`.
 
