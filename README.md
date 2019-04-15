@@ -144,6 +144,15 @@ to be used with `-y` parameter, just like in `.cloudy-init.sh` BTW).
 I recommend using `cloudy cmd` and `cloudy cmd-alt` only for small commands, to invoke some
 processes (e.g. start build scripts). Use `cloudy ssh` if you need more.
 
+## When things go wrong
+
+Make sure you aren't left with zombie DigitalOcean servers:
+
+```bash
+doctl compute droplet list
+doctl compute droplet delete <ID>
+```
+
 ## TODO
 
 - automatically send new files (right now `rsync` is run on every `cloudy` invocation, but nobody
