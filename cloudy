@@ -61,7 +61,6 @@ m_ssh() {
     FLAGS=("-o" "ControlMaster=auto"
         "-o" "ControlPersist=600"
         "-o" "ControlPath=~/.ssh/master-$1"
-        "-o" "ForwardX11=yes"
         "-i" "$KEY_PATH"
         "root@$2" "$3")
     ssh "${FLAGS[@]}"
@@ -82,7 +81,7 @@ m_rsync() {
 
     if [ "$FILE_CHANNEL_REUSE" != "0" ]; then
         FLAGS+=("-e"
-            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -o ForwardX11=yes -i $KEY_PATH")
+            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -i $KEY_PATH")
     fi
 
     FLAGS+=("." "root@$2:~/cloudy/")
@@ -95,7 +94,7 @@ m_rev_rsync() {
 
     if [ "$FILE_CHANNEL_REUSE" != "0" ]; then
         FLAGS+=("-e"
-            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -o ForwardX11=yes -i $KEY_PATH")
+            "ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=~/.ssh/master-$1 -i $KEY_PATH")
     fi
 
     # strip trailing slash, otherwise rsync will merge directories
@@ -191,7 +190,7 @@ cmd_order() {
     echo "Droplet started."
 
     # Sleep as DigitalOcean returns before SSH server is ready
-    sleep 10
+    sleep 30
 
     # TODO: maybe DO will start pushing fingerprint via API one day
     ssh-keyscan $IP >> ~/.ssh/known_hosts
