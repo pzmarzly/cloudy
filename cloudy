@@ -204,6 +204,7 @@ server_setup() {
         echo apt-get install build-essential -y >> $SSUD/install_rust
         echo curl https://sh.rustup.rs -sSf \\| sh -s -- --default-toolchain none -y >> $SSUD/install_rust
         echo /root/.cargo/bin/rustup toolchain add \\\${1:-stable} >> $SSUD/install_rust
+        echo /root/.cargo/bin/rustup default \\\${1:-stable} >> $SSUD/install_rust
         chmod +x $SSUD/install_rust
 
         echo PATH=$SSUD:\$PATH >> /root/.profile
