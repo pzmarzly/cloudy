@@ -6,7 +6,7 @@ directory (`.gitignore`-d files can be excluded), then runs commands (e.g. build
 Also provides shortcut for running X2GO.
 
 Created since it's sometimes not worth it to own expensive hardware (especially laptops), when all
-you have to do is running builds and test suites, and cropping 100k x 100k PNG once in a while.
+you'd need it for is running builds and test suites, and cropping 100k x 100k PNG once in a while.
 
 ## Demo
 
