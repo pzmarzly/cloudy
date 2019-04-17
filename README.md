@@ -5,7 +5,8 @@ directory (`.gitignore`-d files can be excluded), then runs commands (e.g. build
 
 Also provides shortcut for running X2GO.
 
-Created since it's sometimes not worth it to own expensive hardware (especially laptops).
+Created since it's sometimes not worth it to own expensive hardware (especially laptops), when all
+you have to do is running builds and test suites, and cropping 100k x 100k PNG once in a while.
 
 ## Demo
 
@@ -27,6 +28,7 @@ drwx------ 8 root root 4.0K Apr 13 17:44 ..
 -rw-r--r-- 1 root root  133 Apr 13 17:42 Cargo.lock
 -rw-r--r-- 1 root root  123 Apr 13 18:20 Cargo.toml
 drwxr-xr-x 2 root root 4.0K Apr 13 16:42 src
+$ # every "cloudy cmd" sends newly-changed local files
 $ cloudy cmd cargo build
     Finished dev [unoptimized + debuginfo] target(s) in 1.86s
 $ cloudy cmd ls -alh
@@ -38,13 +40,15 @@ drwx------ 8 root root 4.0K Apr 13 17:44 ..
 drwxr-xr-x 2 root root 4.0K Apr 13 16:42 src
 drwxr-xr-x 3 root root 4.0K Apr 13 18:20 target
 $ cloudy get target/debug/rust-example # you can also grab whole folders
+$ # run output binary on local machine:
 $ target/debug/rust-example
 Hello, world!
 $ cloudy cmd install_x2go
 <cut: apt-get output>
-$ cloudy x2go xclock
-<cut: pyhoca-cli output>
-$ cloudy stop
+$ cloudy cmd apt-get install gimp
+$ cloudy x2go gimp
+<cut: pyhoca-cli output ; meanwhile GIMP running on remote server appears>
+$ cloudy stop # stops DigitalOcean server
 ```
 
 ## Installation
