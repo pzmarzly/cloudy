@@ -199,10 +199,12 @@ server_setup() {
         fi
         mkdir -p $SSUD
 
+        echo apt-get update >> $SSUD/install_x2go
         echo add-apt-repository ppa:x2go/stable -y >> $SSUD/install_x2go
         echo apt-get install x2goserver x2goserver-xsession -y >> $SSUD/install_x2go
         chmod +x $SSUD/install_x2go
 
+        echo apt-get update >> $SSUD/install_rust
         echo apt-get install build-essential -y >> $SSUD/install_rust
         echo curl https://sh.rustup.rs -sSf \\| sh -s -- --default-toolchain none -y >> $SSUD/install_rust
         echo /root/.cargo/bin/rustup toolchain add \\\${1:-stable} >> $SSUD/install_rust
