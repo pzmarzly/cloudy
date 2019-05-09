@@ -39,19 +39,21 @@ SEND_GIT=0
 # Load config
 
 if [ -f $GLOBAL_CONF ]; then
+    # shellcheck source=/dev/null
     . $GLOBAL_CONF
 fi
 
 if [ -f $LOCAL_CONF ]; then
+    # shellcheck source=/dev/null
     . $LOCAL_CONF
 fi
 
 if [ -f $LOCAL_LOCKFILE ]; then
-    ID=$(cat $LOCAL_LOCKFILE | cut -f1 -d' ')
+    ID=$(cut -f1 -d' ' "$LOCAL_LOCKFILE")
 fi
 
 if [ -f $LOCAL_LOCKFILE ]; then
-    IP=$(cat $LOCAL_LOCKFILE | cut -f2 -d' ')
+    IP=$(cut -f2 -d' ' "$LOCAL_LOCKFILE")
 fi
 
 # Utilities
@@ -115,10 +117,10 @@ m_rev_rsync() {
     fi
 
     # strip trailing slash, otherwise rsync will merge directories
-    STRIPPED_PATH=$(echo ${3%/})
+    STRIPPED_PATH=${3%/}
 
-    OUTPUT_DIR=$(dirname $STRIPPED_PATH)
-    mkdir -p $OUTPUT_DIR
+    OUTPUT_DIR=$(dirname "$STRIPPED_PATH")
+    mkdir -p "$OUTPUT_DIR"
 
     FLAGS+=("root@$2:~/cloudy/$STRIPPED_PATH" "$OUTPUT_DIR")
 
@@ -172,15 +174,15 @@ random_id() {
 
 run_init() {
     if [ -f $GLOBAL_INIT ] || [ -f $LOCAL_INIT ]; then
-        m_ssh $ID $IP " apt-get update"
+        m_ssh "$ID" "$IP" " apt-get update"
     fi
 
     if [ -f $GLOBAL_INIT ]; then
-        m_ssh $ID $IP " bash -ls" < $GLOBAL_INIT
+        m_ssh "$ID" "$IP" " bash -ls" < $GLOBAL_INIT
     fi
 
     if [ -f $LOCAL_INIT ]; then
-        m_ssh $ID $IP " bash -ls" < $LOCAL_INIT
+        m_ssh "$ID" "$IP" " bash -ls" < $LOCAL_INIT
     fi
 }
 
@@ -188,9 +190,9 @@ server_setup() {
     echo "Setting up server..."
 
     # TODO: WARN: when updating Ubuntu, check if this fix is still necessary
-    m_ssh $ID $IP "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile | true"
+    m_ssh "$ID" "$IP" "sed -i -e 's/mesg n .*true/tty -s \&\& mesg n/g' /root/.profile | true"
 
-    SSUD=$(echo $SERVER_SIDE_UTILS_DIR)
+    SSUD=$SERVER_SIDE_UTILS_DIR
     UTILS_CMD="
         if [ -e $SSUD ]; then
             exit 0
@@ -210,9 +212,9 @@ server_setup() {
         echo PATH=$SSUD:\$PATH >> /root/.profile
     "
 
-    echo "$UTILS_CMD" | m_ssh $ID $IP " bash -ls"
+    echo "$UTILS_CMD" | m_ssh "$ID" "$IP" " bash -ls"
 
-    m_rsync $ID $IP &
+    m_rsync "$ID" "$IP" &
     run_init
 
     echo "Waiting for files to finish transferring..."
@@ -232,10 +234,10 @@ cmd_order() {
         | cut -f2 -d' ' \
         | sed 's/../&:/g;s/:$//')
 
-    ID=cloudy-droplet-`random_id`
+    ID=cloudy-droplet-$(random_id)
     echo "Ordering $ID, size = $SIZE, region = $REGION, key = $KEY..."
 
-    IP=$(doctl compute droplet create $ID \
+    IP=$(doctl compute droplet create "$ID" \
         --region $REGION \
         --image ubuntu-18-04-x64 \
         --size $SIZE \
@@ -250,7 +252,7 @@ cmd_order() {
     sleep 30
 
     # TODO: maybe DO will start pushing fingerprint via API one day
-    ssh-keyscan $IP >> ~/.ssh/known_hosts
+    ssh-keyscan "$IP" >> ~/.ssh/known_hosts
 
     server_setup
 }
@@ -262,7 +264,7 @@ cmd_use() {
         exit 1
     fi
     IP=$1
-    ID=cloudy-server-`random_id`
+    ID=cloudy-server-$(random_id)
     echo "Using $ID..."
     server_setup
 }
@@ -276,22 +278,22 @@ cmd_reinit() {
 
 cmd_cmd() {
     assert_lockfile_present
-    m_rsync $ID $IP
-    CMD=" cd cloudy; $@"
-    m_ssh $ID $IP " bash -ls -c \"$CMD\""
+    m_rsync "$ID" "$IP"
+    CMD=" cd cloudy; $*"
+    m_ssh "$ID" "$IP" " bash -ls -c \"$CMD\""
 }
 
 cmd_cmd-alt() {
     assert_lockfile_present
-    m_rsync $ID $IP
-    CMD=" cd cloudy; $@"
-    echo $CMD | m_ssh $ID $IP " bash -ls"
+    m_rsync "$ID" "$IP"
+    CMD=" cd cloudy; $*"
+    echo "$CMD" | m_ssh "$ID" "$IP" " bash -ls"
 }
 
 cmd_ssh() {
     assert_lockfile_present
-    m_rsync $ID $IP
-    m_ssh $ID $IP
+    m_rsync "$ID" "$IP"
+    m_ssh "$ID" "$IP"
 }
 
 cmd_get() {
@@ -300,11 +302,11 @@ cmd_get() {
         echo "Missing path."
         exit 1
     fi
-    if [ ${1:0:1} == "/" ] || [ ${1:0:1} == "~" ]; then
+    if [ "${1:0:1}" == "/" ] || [ "${1:0:1}" == "~" ]; then
         echo "Cannot download absolute paths"
         exit 1
     fi
-    m_rev_rsync $ID $IP $1
+    m_rev_rsync "$ID" "$IP" "$1"
 }
 
 cmd_x2go() {
@@ -313,15 +315,15 @@ cmd_x2go() {
         echo "Provide a program to run!"
         exit 1
     fi
-    m_rsync $ID $IP
-    CMD="$@"
-    m_x2go $ID $IP $CMD
+    m_rsync "$ID" "$IP"
+    CMD="$*"
+    m_x2go "$ID" "$IP" "$CMD"
 }
 
 cmd_stop() {
     assert_lockfile_present
     rm $LOCAL_LOCKFILE
-    doctl compute droplet delete $ID -f
+    doctl compute droplet delete "$ID" -f
 }
 
 subcommand=$1
@@ -334,7 +336,7 @@ case $subcommand in
         ;;
     *)
         shift
-        cmd_${subcommand} $@
+        "cmd_${subcommand}" "$*"
         ;;
 esac
 exit 0
