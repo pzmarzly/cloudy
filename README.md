@@ -8,6 +8,8 @@ Also provides shortcut for running X2GO.
 Created since it's sometimes not worth it to own expensive hardware (especially laptops), when all
 you'd need it for is running builds and test suites, and cropping 100k x 100k PNG once in a while.
 
+Also check out [VS Code Remote](https://code.visualstudio.com/docs/remote/remote-overview) ([video](https://www.youtube.com/watch?v=rh1Ag41J6IA)).
+
 ## Demo
 
 ```text
